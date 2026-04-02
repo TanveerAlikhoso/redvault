@@ -1,0 +1,50 @@
+uploads = []
+outputs = []
+
+[[generated]]
+id = "Jw4y5VyI1sqov1AxUGCWG"
+uri = "file://artifacts/fitwear/src/assets/hero-bg.png"
+type = "image"
+title = "Hero background image"
+
+[[generated]]
+id = "E_OGRYjdtSPAXOvC-HbBQ"
+uri = "file://artifacts/fitwear/src/assets/brand-story.png"
+type = "image"
+title = "Brand story image"
+
+[[generated]]
+id = "VxmyNJugfO2dmdEZM8ZeO"
+uri = "file://artifacts/fitwear/src/assets/product-1.png"
+type = "image"
+title = "Product 1 running jacket"
+
+[[generated]]
+id = "VlA-AmO2-B2l30d4sbtK3"
+uri = "file://artifacts/fitwear/src/assets/product-2.png"
+type = "image"
+title = "Product 2 training shorts"
+
+[[generated]]
+id = "xga91TC4o8OtjBW5iGqmg"
+uri = "file://artifacts/fitwear/src/assets/product-3.png"
+type = "image"
+title = "Product 3 yoga leggings"
+
+[[generated]]
+id = "xz2tfh5F7Si5Qtcqs7fz3"
+uri = "file://artifacts/fitwear/src/assets/product-4.png"
+type = "image"
+title = "Product 4 compression shirt"
+
+[[generated]]
+id = "1Uzu_P1cc_APfqVUE_NP1"
+uri = "file://artifacts/fitwear/src/assets/category-running.png"
+type = "image"
+title = "Category running background"
+
+[[generated]]
+id = "BJiHHIZUe_4ktWAraBskh"
+uri = "file://artifacts/fitwear/src/assets/category-training.png"
+type = "image"
+title = "Category training background"
