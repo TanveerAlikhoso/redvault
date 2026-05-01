@@ -1,17 +1,19 @@
 import { useState, useEffect } from "react";
 import { Link, useLocation } from "wouter";
 import { ShoppingCart, Search, Menu, X } from "lucide-react";
+import { useCart } from "@/context/CartContext";
 
 const navLinks = [
   { label: "Home", href: "/" },
-  { label: "Shop", href: "/#shop" },
-  { label: "Categories", href: "/#categories" },
+  { label: "Shop", href: "/shop" },
+  { label: "Categories", href: "/shop" },
   { label: "About", href: "/#about" },
   { label: "Blog", href: "/blog" },
   { label: "Contact", href: "/contact" },
 ];
 
 export default function Navbar() {
+  const { totalItems } = useCart();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [location] = useLocation();
@@ -21,6 +23,11 @@ export default function Navbar() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  const isActive = (href: string) => {
+    if (href === "/") return location === "/";
+    return location.startsWith(href);
+  };
 
   return (
     <>
@@ -43,7 +50,7 @@ export default function Navbar() {
                 key={link.label}
                 href={link.href}
                 className={`text-sm font-semibold uppercase tracking-wider transition-colors ${
-                  location === link.href ? "text-primary" : "hover:text-primary"
+                  isActive(link.href) ? "text-primary" : "hover:text-primary"
                 }`}
               >
                 {link.label}
@@ -52,17 +59,18 @@ export default function Navbar() {
           </nav>
 
           <div className="flex items-center gap-4">
-            <button data-testid="button-search" className="p-2 hover:text-primary transition-colors hidden sm:block">
+            <button className="p-2 hover:text-primary transition-colors hidden sm:block">
               <Search size={20} />
             </button>
-            <button data-testid="button-cart" className="p-2 hover:text-primary transition-colors relative">
+            <Link href="/cart" className="p-2 hover:text-primary transition-colors relative">
               <ShoppingCart size={20} />
-              <span className="absolute top-0 right-0 bg-primary text-primary-foreground text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
-                3
-              </span>
-            </button>
+              {totalItems > 0 && (
+                <span className="absolute top-0 right-0 bg-primary text-primary-foreground text-[10px] font-bold w-4 h-4 rounded-full flex items-center justify-center">
+                  {totalItems > 9 ? "9+" : totalItems}
+                </span>
+              )}
+            </Link>
             <button
-              data-testid="button-menu"
               className="p-2 hover:text-primary transition-colors lg:hidden"
               onClick={() => setMobileMenuOpen(true)}
             >
@@ -86,11 +94,20 @@ export default function Navbar() {
                 key={link.label}
                 href={link.href}
                 onClick={() => setMobileMenuOpen(false)}
-                className="text-3xl font-black uppercase tracking-widest hover:text-primary transition-colors"
+                className={`text-3xl font-black uppercase tracking-widest hover:text-primary transition-colors ${
+                  isActive(link.href) ? "text-primary" : ""
+                }`}
               >
                 {link.label}
               </a>
             ))}
+            <a
+              href="/cart"
+              onClick={() => setMobileMenuOpen(false)}
+              className="text-3xl font-black uppercase tracking-widest hover:text-primary transition-colors flex items-center gap-3"
+            >
+              Cart {totalItems > 0 && <span className="text-primary">({totalItems})</span>}
+            </a>
           </nav>
         </div>
       )}

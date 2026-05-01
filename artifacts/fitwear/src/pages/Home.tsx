@@ -1,22 +1,32 @@
 import { useEffect, useState } from "react";
+import { Link } from "wouter";
 import { motion } from "framer-motion";
-import { Star, ArrowRight } from "lucide-react";
+import { Star, ArrowRight, ShoppingCart } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import Navbar from "@/components/Navbar";
 import Footer from "@/components/Footer";
+import { products, categories } from "@/data/store";
+import { useCart } from "@/context/CartContext";
 
 import heroBg from "@/assets/hero-bg.png";
 import brandStory from "@/assets/brand-story.png";
-import product1 from "@/assets/product-1.png";
-import product2 from "@/assets/product-2.png";
-import product3 from "@/assets/product-3.png";
-import product4 from "@/assets/product-4.png";
+import p1 from "@/assets/product-1.png";
+import p2 from "@/assets/product-2.png";
+import p3 from "@/assets/product-3.png";
+import p4 from "@/assets/product-4.png";
 import categoryRunning from "@/assets/category-running.png";
 import categoryTraining from "@/assets/category-training.png";
 
+const imgs = [p1, p2, p3, p4];
+
 const CAT_PLACEHOLDER =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='400' height='400' viewBox='0 0 400 400'%3E%3Crect width='400' height='400' fill='%231a1a1a'/%3E%3C/svg%3E";
+
+const catImgs: Record<string, string> = {
+  "fitness-tools": categoryRunning,
+  "health-devices": categoryTraining,
+};
 
 const fadeInUp = {
   hidden: { opacity: 0, y: 40 },
@@ -28,8 +38,12 @@ const staggerContainer = {
   visible: { opacity: 1, transition: { staggerChildren: 0.1 } },
 };
 
+const featuredProducts = products.filter((p) => p.badge).slice(0, 8);
+
 export default function Home() {
+  const { addToCart } = useCart();
   const [timeLeft, setTimeLeft] = useState({ days: 7, hours: 11, minutes: 45, seconds: 30 });
+  const [added, setAdded] = useState<string | null>(null);
 
   useEffect(() => {
     const timer = setInterval(() => {
@@ -44,25 +58,11 @@ export default function Home() {
     return () => clearInterval(timer);
   }, []);
 
-  const categories = [
-    { name: "Fitness Tools", img: categoryRunning },
-    { name: "Health Devices", img: categoryTraining },
-    { name: "Beauty Tools", img: CAT_PLACEHOLDER },
-    { name: "Supplements", img: CAT_PLACEHOLDER },
-    { name: "Skincare", img: CAT_PLACEHOLDER },
-    { name: "Wellness", img: CAT_PLACEHOLDER },
-  ];
-
-  const products = [
-    { name: "Pro Massage Gun", price: "$149.99", img: product1, rating: 5, badge: "Best Seller" },
-    { name: "Smart Jump Rope", price: "$49.99", img: product2, rating: 4, badge: "New" },
-    { name: "LED Face Mask", price: "$89.99", img: product3, rating: 5, badge: "New" },
-    { name: "Resistance Band Set", price: "$34.99", img: product4, rating: 4, badge: null },
-    { name: "Ultrasonic Skin Scrubber", price: "$79.99", img: product1, rating: 5, badge: null },
-    { name: "Ab Roller Pro", price: "$29.99", img: product2, rating: 4, badge: null },
-    { name: "Collagen Boost Serum", price: "$59.99", img: product3, rating: 5, badge: null },
-    { name: "Foam Roller Deluxe", price: "$44.99", img: product4, rating: 4, badge: null },
-  ];
+  const handleAdd = (product: typeof products[0]) => {
+    addToCart(product);
+    setAdded(product.id);
+    setTimeout(() => setAdded(null), 1500);
+  };
 
   const stats = [
     { value: "25,000+", label: "Happy Customers" },
@@ -81,7 +81,7 @@ export default function Home() {
     <div className="bg-background text-foreground min-h-screen overflow-x-hidden selection:bg-primary selection:text-primary-foreground">
       <Navbar />
 
-      {/* Hero Section */}
+      {/* Hero */}
       <section id="home" className="relative h-screen flex items-center justify-center overflow-hidden">
         <div className="absolute inset-0 z-0">
           <img src={heroBg} alt="Hero background" className="w-full h-full object-cover object-center" />
@@ -99,15 +99,19 @@ export default function Home() {
               <br />Beauty
             </motion.h1>
             <motion.p variants={fadeInUp} className="text-lg md:text-xl text-gray-300 max-w-xl mb-10 font-light">
-              Premium tools for your fitness, health, and beauty routine. One vault. Everything you need to look and feel your best.
+              Premium tools for your fitness, health, and beauty routine. One vault. Everything you need.
             </motion.p>
             <motion.div variants={fadeInUp} className="flex flex-wrap gap-4">
-              <Button data-testid="button-shop-now" size="lg" className="h-14 px-8 text-lg rounded-none uppercase font-bold tracking-wider">
-                Shop Now <ArrowRight className="ml-2" />
-              </Button>
-              <Button data-testid="button-explore" size="lg" variant="outline" className="h-14 px-8 text-lg rounded-none uppercase font-bold tracking-wider border-2 hover:bg-white hover:text-black transition-colors">
-                Explore Collection
-              </Button>
+              <Link href="/shop">
+                <Button size="lg" className="h-14 px-8 text-lg rounded-none uppercase font-bold tracking-wider">
+                  Shop Now <ArrowRight className="ml-2" />
+                </Button>
+              </Link>
+              <Link href="/category/fitness-tools">
+                <Button size="lg" variant="outline" className="h-14 px-8 text-lg rounded-none uppercase font-bold tracking-wider border-2 hover:bg-white hover:text-black transition-colors">
+                  Explore Categories
+                </Button>
+              </Link>
             </motion.div>
           </motion.div>
         </div>
@@ -147,32 +151,36 @@ export default function Home() {
                 Shop by <span className="text-primary">Category</span>
               </h2>
             </div>
-            <a href="#" className="hidden md:flex items-center gap-2 font-bold uppercase tracking-wider text-primary hover:underline">
+            <Link href="/shop" className="hidden md:flex items-center gap-2 font-bold uppercase tracking-wider text-primary hover:underline">
               View All <ArrowRight size={16} />
-            </a>
+            </Link>
           </motion.div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             {categories.map((cat, i) => (
               <motion.div
-                key={cat.name}
+                key={cat.slug}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
-                className="group relative aspect-[4/3] overflow-hidden bg-card cursor-pointer"
-                data-testid={`card-category-${i}`}
               >
-                <img src={cat.img} alt={cat.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-50 group-hover:opacity-30" />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-                <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
-                  <h3 className="text-3xl md:text-4xl font-black uppercase tracking-widest transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
-                    {cat.name}
-                  </h3>
-                  <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
-                    <span className="bg-primary text-primary-foreground px-4 py-2 font-bold uppercase text-sm">Explore</span>
+                <Link href={`/category/${cat.slug}`} className="group relative aspect-[4/3] overflow-hidden bg-card cursor-pointer block">
+                  <img
+                    src={catImgs[cat.slug] ?? CAT_PLACEHOLDER}
+                    alt={cat.name}
+                    className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-110 opacity-50 group-hover:opacity-30"
+                  />
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
+                  <div className="absolute inset-0 flex flex-col items-center justify-center p-6 text-center">
+                    <h3 className="text-3xl md:text-4xl font-black uppercase tracking-widest transform translate-y-4 group-hover:translate-y-0 transition-transform duration-300">
+                      {cat.name}
+                    </h3>
+                    <div className="mt-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <span className="bg-primary text-primary-foreground px-4 py-2 font-bold uppercase text-sm">Explore</span>
+                    </div>
                   </div>
-                </div>
+                </Link>
               </motion.div>
             ))}
           </div>
@@ -193,9 +201,9 @@ export default function Home() {
           </motion.div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-x-6 gap-y-12">
-            {products.map((product, i) => (
+            {featuredProducts.map((product, i) => (
               <motion.div
-                key={i}
+                key={product.id}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
@@ -203,41 +211,48 @@ export default function Home() {
                 className="group flex flex-col"
                 data-testid={`card-product-${i}`}
               >
-                <div className="relative aspect-[3/4] bg-card mb-4 overflow-hidden border border-border">
-                  <img src={product.img} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 mix-blend-lighten" />
-                  <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center">
-                    <Button className="translate-y-4 group-hover:translate-y-0 transition-transform duration-300 uppercase font-bold rounded-none">
-                      Quick Add
-                    </Button>
-                  </div>
+                <Link href={`/product/${product.slug}`} className="block relative aspect-[3/4] bg-card mb-4 overflow-hidden border border-border hover:border-primary transition-colors duration-300">
+                  <img src={imgs[(product.img - 1) % 4]} alt={product.name} className="w-full h-full object-cover transition-transform duration-700 group-hover:scale-105 mix-blend-lighten" />
+                  <div className="absolute inset-0 bg-black/30 opacity-0 group-hover:opacity-100 transition-opacity duration-300" />
                   {product.badge && (
                     <div className="absolute top-3 left-3 bg-primary text-primary-foreground text-xs font-bold uppercase px-2 py-1">
                       {product.badge}
                     </div>
                   )}
-                </div>
+                </Link>
 
-                <div className="flex justify-between items-start">
-                  <div>
-                    <h4 className="font-bold text-base mb-1 uppercase tracking-wide group-hover:text-primary transition-colors">
-                      {product.name}
-                    </h4>
-                    <div className="flex gap-1 mb-2">
-                      {[...Array(5)].map((_, j) => (
-                        <Star key={j} size={13} className={j < product.rating ? "fill-primary text-primary" : "fill-muted text-muted"} />
-                      ))}
-                    </div>
+                <Link href={`/product/${product.slug}`} className="block">
+                  <div className="flex gap-1 mb-2">
+                    {[...Array(5)].map((_, j) => (
+                      <Star key={j} size={13} className={j < product.rating ? "fill-primary text-primary" : "fill-muted text-muted"} />
+                    ))}
+                    <span className="text-muted-foreground text-xs ml-1">({product.reviews})</span>
                   </div>
-                  <span className="font-bold text-lg text-primary">{product.price}</span>
+                  <h4 className="font-bold text-base mb-1 uppercase tracking-wide group-hover:text-primary transition-colors">
+                    {product.name}
+                  </h4>
+                </Link>
+
+                <div className="flex items-center justify-between mt-auto pt-2">
+                  <span className="font-black text-lg text-primary">${product.price.toFixed(2)}</span>
+                  <button
+                    onClick={() => handleAdd(product)}
+                    className={`flex items-center gap-1.5 px-3 py-2 text-xs font-bold uppercase tracking-wider transition-all duration-200 ${added === product.id ? "bg-primary text-primary-foreground" : "border border-border hover:border-primary hover:text-primary"}`}
+                  >
+                    <ShoppingCart size={13} />
+                    {added === product.id ? "Added!" : "Add"}
+                  </button>
                 </div>
               </motion.div>
             ))}
           </div>
 
           <div className="mt-16 text-center">
-            <Button variant="outline" size="lg" className="rounded-none uppercase font-bold tracking-widest border-2 h-14 px-10">
-              View All Products
-            </Button>
+            <Link href="/shop">
+              <Button variant="outline" size="lg" className="rounded-none uppercase font-bold tracking-widest border-2 h-14 px-10">
+                View All Products
+              </Button>
+            </Link>
           </div>
         </div>
       </section>
@@ -269,9 +284,11 @@ export default function Home() {
             ))}
           </div>
 
-          <Button size="lg" data-testid="button-shop-sale" className="bg-primary-foreground text-primary hover:bg-black hover:text-white h-14 px-12 text-lg rounded-none uppercase font-bold tracking-wider border-none">
-            Shop Sale
-          </Button>
+          <Link href="/shop">
+            <Button size="lg" className="bg-primary-foreground text-primary hover:bg-black hover:text-white h-14 px-12 text-lg rounded-none uppercase font-bold tracking-wider border-none">
+              Shop Sale
+            </Button>
+          </Link>
         </div>
       </section>
 
@@ -306,11 +323,13 @@ export default function Home() {
                 RedVault was built for people who take their health, fitness, and beauty seriously. We curate only the highest-quality tools — from recovery devices to professional-grade skincare — so you never have to compromise.
               </p>
               <p className="text-lg text-muted-foreground mb-10 font-light leading-relaxed">
-                Every product in our vault is tested, reviewed, and selected by wellness professionals. We believe that looking good and feeling strong go hand in hand — and we've built the collection to prove it.
+                Every product in our vault is tested, reviewed, and selected by wellness professionals. We believe that looking good and feeling strong go hand in hand.
               </p>
-              <Button size="lg" className="rounded-none uppercase font-bold tracking-widest h-14 px-8">
-                Read Our Story
-              </Button>
+              <Link href="/contact">
+                <Button size="lg" className="rounded-none uppercase font-bold tracking-widest h-14 px-8">
+                  Get in Touch
+                </Button>
+              </Link>
             </motion.div>
           </div>
         </div>
@@ -328,7 +347,6 @@ export default function Home() {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
                 className="text-center"
-                data-testid={`stat-${i}`}
               >
                 <div className="text-4xl md:text-6xl font-black text-transparent mb-2" style={{ WebkitTextStroke: "1px hsl(var(--foreground))" }}>
                   {stat.value}
@@ -359,7 +377,6 @@ export default function Home() {
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1 }}
                 className="bg-card border border-border p-8 relative flex flex-col"
-                data-testid={`card-testimonial-${i}`}
               >
                 <div className="flex gap-1 mb-6">
                   {[...Array(5)].map((_, j) => (
@@ -386,17 +403,16 @@ export default function Home() {
               Join The <span className="text-primary">Vault</span>
             </h2>
             <p className="text-xl text-muted-foreground mb-10">
-              Get exclusive deals, early access to new arrivals, and expert wellness tips — straight to your inbox.
+              Get exclusive deals, early access to new arrivals, and expert wellness tips.
             </p>
 
             <form className="flex flex-col sm:flex-row gap-4 max-w-2xl mx-auto" onSubmit={(e) => e.preventDefault()}>
               <Input
                 type="email"
                 placeholder="Enter your email address"
-                data-testid="input-email"
                 className="h-14 rounded-none bg-background border-border text-foreground uppercase tracking-wider font-bold placeholder:text-muted-foreground text-center sm:text-left px-6 text-base"
               />
-              <Button data-testid="button-subscribe" size="lg" type="submit" className="h-14 rounded-none uppercase font-bold tracking-widest px-10">
+              <Button size="lg" type="submit" className="h-14 rounded-none uppercase font-bold tracking-widest px-10">
                 Subscribe
               </Button>
             </form>
