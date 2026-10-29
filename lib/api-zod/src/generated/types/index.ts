@@ -7,3 +7,6 @@
  */
 
 export * from "./healthStatus";
+export * from "./newTask";
+export * from "./task";
+export * from "./taskPatch";
