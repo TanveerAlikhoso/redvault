@@ -1,0 +1,17 @@
+# Local PostgreSQL for development. The API server itself runs on your host
+# (pnpm --filter @workspace/api-server run dev), not in Compose.
+services:
+  postgres:
+    image: postgres:16-alpine
+    container_name: redvault-postgres
+    environment:
+      POSTGRES_USER: redvault
+      POSTGRES_PASSWORD: redvault
+      POSTGRES_DB: redvault
+    ports:
+      - "5432:5432"
+    volumes:
+      - redvault-pgdata:/var/lib/postgresql/data
+
+volumes:
+  redvault-pgdata:

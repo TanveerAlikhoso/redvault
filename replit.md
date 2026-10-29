@@ -19,16 +19,19 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 ## Structure
 
 ```text
-artifacts-monorepo/
+redvault/
 ├── artifacts/              # Deployable applications
-│   └── api-server/         # Express API server
+│   ├── api-server/         # Express API server
+│   └── web/                # React demo front end (Tasks page)
 ├── lib/                    # Shared libraries
 │   ├── api-spec/           # OpenAPI spec + Orval codegen config
 │   ├── api-client-react/   # Generated React Query hooks
 │   ├── api-zod/            # Generated Zod schemas from OpenAPI
-│   └── db/                 # Drizzle ORM schema + DB connection
+│   └── db/                 # Drizzle ORM schema + DB connection + migrations
 ├── scripts/                # Utility scripts (single workspace package)
 │   └── src/                # Individual .ts scripts, run via `pnpm --filter @workspace/scripts run <script>`
+├── .env.example            # Environment variables (copy to .env)
+├── docker-compose.yml      # Local PostgreSQL for development
 ├── pnpm-workspace.yaml     # pnpm workspace (artifacts/*, lib/*, lib/integrations/*, scripts)
 ├── tsconfig.base.json      # Shared TS options (composite, bundler resolution, es2022)
 ├── tsconfig.json           # Root TS project references
@@ -52,15 +55,31 @@ Every package extends `tsconfig.base.json` which sets `composite: true`. The roo
 
 ### `artifacts/api-server` (`@workspace/api-server`)
 
-Express 5 API server. Routes live in `src/routes/` and use `@workspace/api-zod` for request and response validation and `@workspace/db` for persistence.
+Express 5 API server. Routes live in `src/routes/` and use `@workspace/db`
+for persistence (request validation via drizzle-zod insert schemas) and
+`@workspace/api-zod` for response validation.
 
 - Entry: `src/index.ts` — reads `PORT`, starts Express
 - App setup: `src/app.ts` — mounts CORS, JSON/urlencoded parsing, routes at `/api`
-- Routes: `src/routes/index.ts` mounts sub-routers; `src/routes/health.ts` exposes `GET /health` (full path: `/api/health`)
+- Routes: `src/routes/index.ts` mounts sub-routers;
+  `src/routes/health.ts` exposes `GET /healthz` (full path:
+  `/api/healthz`); `src/routes/tasks.ts` exposes the Tasks CRUD routes
+  (`GET /tasks`, `POST /tasks`, `GET /tasks/{id}`, `PATCH /tasks/{id}`,
+  `DELETE /tasks/{id}`)
 - Depends on: `@workspace/db`, `@workspace/api-zod`
 - `pnpm --filter @workspace/api-server run dev` — run the dev server
-- `pnpm --filter @workspace/api-server run build` — production esbuild bundle (`dist/index.cjs`)
+- `pnpm --filter @workspace/api-server run build` — production esbuild bundle (`dist/index.mjs`)
 - Build bundles an allowlist of deps (express, cors, pg, drizzle-orm, zod, etc.) and externalizes the rest
+
+### `artifacts/web` (`@workspace/web`)
+
+React 19 + Vite demo front end. A single Tasks page that consumes the
+API through the generated React Query hooks in
+`@workspace/api-client-react`. The Vite dev server proxies `/api` to
+`http://localhost:8080`.
+
+- `pnpm --filter @workspace/web run dev` — Vite dev server on port 5173
+- `pnpm --filter @workspace/web run build` — production static build
 
 ### `lib/db` (`@workspace/db`)
 
@@ -68,11 +87,15 @@ Database layer using Drizzle ORM with PostgreSQL. Exports a Drizzle client insta
 
 - `src/index.ts` — creates a `Pool` + Drizzle instance, exports schema
 - `src/schema/index.ts` — barrel re-export of all models
-- `src/schema/<modelname>.ts` — table definitions with `drizzle-zod` insert schemas (no models definitions exist right now)
-- `drizzle.config.ts` — Drizzle Kit config (requires `DATABASE_URL`, automatically provided by Replit)
+- `src/schema/<modelname>.ts` — table definitions with `drizzle-zod` insert schemas (currently: `tasks`)
+- `drizzle.config.ts` — Drizzle Kit config (requires `DATABASE_URL`, set in `.env`; see `.env.example`)
+- `drizzle/` — generated SQL migrations (committed)
 - Exports: `.` (pool, db, schema), `./schema` (schema only)
 
-Production migrations are handled by Replit when publishing. In development, we just use `pnpm --filter @workspace/db run push`, and we fallback to `pnpm --filter @workspace/db run push-force`.
+Apply the schema with `pnpm --filter @workspace/db run push` in
+development, or generate + apply migrations for production-style
+deploys (`drizzle-kit generate`, then `drizzle-kit migrate` — see
+README). `push-force` exists as a fallback for conflicting pushes.
 
 ### `lib/api-spec` (`@workspace/api-spec`)
 
@@ -85,11 +108,13 @@ Run codegen: `pnpm --filter @workspace/api-spec run codegen`
 
 ### `lib/api-zod` (`@workspace/api-zod`)
 
-Generated Zod schemas from the OpenAPI spec (e.g. `HealthCheckResponse`). Used by `api-server` for response validation.
+Generated Zod schemas from the OpenAPI spec (e.g. `HealthCheckResponse`,
+`ListTasksResponse`). Used by `api-server` for response validation.
 
 ### `lib/api-client-react` (`@workspace/api-client-react`)
 
-Generated React Query hooks and fetch client from the OpenAPI spec (e.g. `useHealthCheck`, `healthCheck`).
+Generated React Query hooks and fetch client from the OpenAPI spec (e.g.
+`useListTasks`, `useCreateTask`, `healthCheck`).
 
 ### `scripts` (`@workspace/scripts`)
 
