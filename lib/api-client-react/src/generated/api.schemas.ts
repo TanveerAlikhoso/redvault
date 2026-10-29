@@ -8,3 +8,24 @@
 export interface HealthStatus {
   status: string;
 }
+
+export interface Task {
+  id: number;
+  title: string;
+  description?: string | null;
+  completed: boolean;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface NewTask {
+  title: string;
+  description?: string | null;
+  completed?: boolean;
+}
+
+export interface TaskPatch {
+  title?: string;
+  description?: string | null;
+  completed?: boolean;
+}
